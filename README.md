@@ -44,7 +44,7 @@ There's a test suite inside the `test` directory.
 
 To run them, just execute the test script:
 
-    ./run_tests.sh
+    ./run_tests.bash
 
 It requires mypy. If don't have it, just run:
 
