@@ -1,3 +1,5 @@
+"""Functions and procedures forming the basis of our 'Just Get 10' clone."""
+
 from typing import Tuple, List
 from random import random
 
@@ -22,7 +24,7 @@ def generate_cell(ratios: Tuple[float, float, float]) -> int:
         return 1
 
 def generate_board(size: int, ratios: Tuple[float, float, float]) -> Board:
-    """Create a fresh new Just Get 10 board."""
+    """Create a fresh new 'Just Get 10' board."""
 
     return [[generate_cell(ratios) for _ in range(size)] for _ in range(size)]
 
