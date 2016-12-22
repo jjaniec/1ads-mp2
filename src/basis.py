@@ -3,7 +3,7 @@
 from typing import Tuple, List
 from random import random
 
-# Types declarations
+# Type aliases
 Row = List[int]
 Board = List[Row]
 
@@ -16,9 +16,9 @@ def generate_cell(ratios: Tuple[float, float, float]) -> int:
 
     if x < ratios[0]:
         return 4
-    elif x < ratio[1]:
+    elif x < ratios[1]:
         return 3
-    elif x < ratio[2]:
+    elif x < ratios[2]:
         return 2
     else:
         return 1
