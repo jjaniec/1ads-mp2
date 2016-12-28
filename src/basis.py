@@ -1,42 +1,37 @@
-from random import  randint
-import              sys
+"""Functions and procedures forming the basis of our 'Just Get 10' clone."""
 
-def ft_randint():
-    #For debug purposes, waitin to merge w/ 3.1.1
-    return (randint(0,4));
+from typing import Tuple, List
+from random import random
 
-def ft_generate_board(n, tuple_):
-    """Generate game board, obviously"""
-    i = 0;
-    j = 0;
-    arr = [[0] * n for _ in range(n)];
+# Type aliases
+Row = List[int]
+Board = List[Row]
 
-    while (j < n):
-        while (i < n):
-            #arr[j][i] = ft_3_1_1(tuple_);
-            arr[j][i] = ft_randint();
-            i += 1;
-        j += 1;
-        i = 0;
+def generate_cell(ratios: Tuple[float, float, float]) -> int:
+    """Given a tuple of probabilities, this function return an integer
+    representing a randomly generated 'Just Get 10' cell.
+    """
 
-    print(arr);
-    return (arr);
+    x = random()
 
-def ft_display_board(arr, size):
-    """Display our game board"""
-    i = 0;
-    j = 0;
+    if x < ratios[0]:
+        return 4
+    elif x < ratios[1]:
+        return 3
+    elif x < ratios[2]:
+        return 2
+    else:
+        return 1
 
-    while (j < size):
-        while (i < size):
-            end_ = " ";
-            if ((i + 1) == size):
-                end_ = "";
-            print(str(arr[j][i]), end=end_);
-            i += 1;
-        print();
-        i = 0;
-        j += 1;
+def generate_board(size: int, ratios: Tuple[float, float, float]) -> Board:
+    """Create a fresh new 'Just Get 10' board."""
 
-ft_display_board(ft_generate_board(int(sys.argv[1]), (0,0,0)), int(sys.argv[1]));
-#ft_generate_board(5, (0,0,0));
+    return [[generate_cell(ratios) for _ in range(size)] for _ in range(size)]
+
+def display_board(board: Board):
+    """Display the board, formatted to be presentable to the cli user."""
+
+    for row in board:
+        for cell in row:
+            print(cell, end=' ')
+        print()
