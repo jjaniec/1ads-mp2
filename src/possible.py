@@ -2,7 +2,7 @@
 player.
 """
 
-from typing import List
+from typing import List, Any
 
 # Type aliases
 Row = List[int]
@@ -34,3 +34,13 @@ def is_board_still_playable(board: Board) -> bool:
 
     n = range(len(board))
     return any([has_similar_adjacent_cell(board, x, y) for y in n for x in n])
+
+def maximum_value_in_board(board: Board) -> int:
+    """Given a board, it returns the maximum value in it."""
+
+    return max(flatten(board))
+
+def flatten(l: List[List[Any]]) -> List[Any]:
+    """Return a one dimensional list made from a two dimensional list."""
+
+    return [x for y in l for x in y]
