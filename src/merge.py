@@ -5,7 +5,7 @@ def     ft_appendable_in_arr(arr, coords, coordstoadd):
         return (0);
     return (1);
 
-def     ft_get_adj_cells(n, arr, coords, tuplarr):
+def     ft_get_adj_cells(n, arr, coords, li):
     coordstocheck = [(-1, 0), (1, 0), (0, -1), (0, 1)];
     i = 0;
     print(arr);
@@ -17,9 +17,24 @@ def     ft_get_adj_cells(n, arr, coords, tuplarr):
         if (x >= 0 and x < n and y >= 0 and y < n):
             if (ft_appendable_in_arr(arr, coords, (y, x)) == 0):
                 print("0");
-                tuplarr.append((y, x));
+                li.append((y, x));
         i += 1;
-    print(tuplarr);
+    print(li);
 
-arr = [[5,5,2,5,1],[5,2,9,7,5],[4,9,9,5,3],[4,2,9,5,4],[4,2,5,1,6]];
-ft_get_adj_cells(5, arr, (2,2),[(2,2)]);
+def     ft_change_cells_vals(n, arr, li):
+    i = 1;
+    arr[li[0][0]][li[0][1]] += 1;
+    while (i < len(li)):
+        arr[li[i][0]][li[i][1]] = 0;
+        print(li[i])
+        print(arr)
+        i += 1;
+    print(li);
+    print(arr);
+
+tupl = (2,2);
+li = [tupl];
+arr = [[8,8,2,8,1],[8,2,8,8,8],[4,8,8,8,3],[4,2,8,8,4],[4,2,8,1,6]];
+ft_get_adj_cells(5, arr, tupl, li);
+ft_change_cells_vals(5, arr, li);
+
