@@ -1,4 +1,5 @@
 import sys
+from basis import *
 
 def     ft_appendable_in_arr(arr, coords, coordstoadd):
     if (arr[coords[0]][coords[1]] == arr[coordstoadd[0]][coordstoadd[1]]):
@@ -28,7 +29,7 @@ def     ft_fill_zero(n, arr, coords):
     while ((coords[0] - i - 1) > -1):
         arr[coords[0] - i][coords[1]] = arr[coords[0] - 1 - i][coords[1]];
         i += 1;
-    arr[coords[0] - i][coords[1]] = 666;
+    arr[coords[0] - i][coords[1]] = generate_cell((0.2,0.3,0.4));
 
 def     ft_fill_cells(n, arr, tupl):
     i = 0;
@@ -48,7 +49,9 @@ def     ft_fill_cells(n, arr, tupl):
 
 tupl = (2,2);
 li = [tupl];
-arr = [[8,8,2,8,1],[8,2,8,8,8],[4,8,0,8,3],[4,2,8,8,4],[4,2,8,1,6]];
-ft_get_adj_cells(5, arr, tupl, li);
-ft_change_cells_vals(5, arr, li);
+arr = [[8,8,69,8,1],[8,2,0,8,8],[4,8,0,8,3],[4,2,8,8,4],[4,2,8,1,6]];
+#ft_get_adj_cells(5, arr, tupl, li);
+#ft_change_cells_vals(5, arr, li);
+print(arr)
 ft_fill_cells(5, arr, tupl);
+print(arr);
