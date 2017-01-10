@@ -36,14 +36,10 @@ def     ft_fill_cells(n, arr, tupl):
     j = 0;
     while (i < n):
         while (j < n):
-            print("run")
-            print(str(arr[i][j]))
             if (arr[i][j] == 0):
-                print("found0!")
                 ft_fill_zero(n, arr, (i, j));
             j += 1
         i += 1
-        print("strend");
         j = 0
 
 
@@ -52,6 +48,4 @@ li = [tupl];
 arr = [[8,8,69,8,1],[8,2,0,8,8],[4,8,0,8,3],[4,2,8,8,4],[4,2,8,1,6]];
 #ft_get_adj_cells(5, arr, tupl, li);
 #ft_change_cells_vals(5, arr, li);
-print(arr)
 ft_fill_cells(5, arr, tupl);
-print(arr);
