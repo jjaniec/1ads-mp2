@@ -1,6 +1,5 @@
 import os.path
-import io
-from typing import Tuple, List
+from typing import List
 
 Row = List[int]
 Board = List[Row]
@@ -17,12 +16,13 @@ def     save_board(arr: Board, path: str) -> None:
 
 def     lf_existing_saves(path: str) -> bool:
     """check if a savefile already exists"""
-    return (os.path.exists(path))
+    return os.path.exists(path)
 
 def     get_saved_board(path: str) -> str:
     """return saved board"""
     file_ = open(path)
-    return (file_.read())
+    return file_.read()
 
-exec("arr2 = " + get_saved_board(fullpath))
-print(arr2)
+#arr2 = []
+#exec("arr2 = " + get_saved_board(fullpath))
+#print(arr2)
