@@ -14,16 +14,15 @@ def     save_board(arr: Board, path: str) -> None:
     file_ = open(path, "w")
     file_.write(str(arr))
     file_.close()
+
 def     lf_existing_saves(path: str) -> bool:
-#    if (os.path.exists(path)):
-        #print("Found an existing save file\nWould you start a new game or continue the existing one ?")
+    """check if a savefile already exists"""
     return (os.path.exists(path))
 
 def     get_saved_board(path: str) -> str:
+    """return saved board"""
     file_ = open(path)
-    print(file_.read())
     return (file_.read())
 
-save_board("xDDDD", fullpath)
-print(str(lf_existing_saves(fullpath)))
-get_saved_board(fullpath)
+exec("arr2 = " + get_saved_board(fullpath))
+print(arr2)
