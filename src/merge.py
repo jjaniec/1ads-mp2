@@ -21,14 +21,19 @@ def     get_adj_cells(n: int, arr: Board, coords: Tuple[int, int], li:\
     equal of the given one"""
     i = 0
     coordstocheck = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    givenlistlen = len(li)
 
     while i != 4:
         x = coords[1] + coordstocheck[i][1]
         y = coords[0] + coordstocheck[i][0]
         if x >= 0 and x < n and y >= 0 and y < n:
             if get_appendable_in_arr(arr, coords, (y, x)) == 0:
-                li.append((y, x))
+                 if (y, x) not in li:
+                    li.append((y, x))
         i += 1
+    if (givenlistlen != len(li)):
+        for _ in range(1, len(li)):
+            get_adj_cells(n, arr, li[_], li)
 
 #3.3[1]
 def     change_cells_values(n: int, arr: Board, li: List[Coord]):
