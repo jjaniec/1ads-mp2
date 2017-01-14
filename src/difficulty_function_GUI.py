@@ -21,12 +21,20 @@ def     get_dificulty_GUI(rectspositions, rectssize):
     rect3_surface.fill((255, 0, 0))
 
     while difficulty == (1, 1, 1):
+        for e in pygame.event.get():
+            if e.type == MOUSEBUTTONUP and e.button == 1:
+                if rect1.collidepoint(e.pos):
+                    difficulty = EASY
+                if rect2.collidepoint(e.pos):
+                    difficulty = MEDIUM
+                if rect3.collidepoint(e.pos):
+                    difficulty = HARD
+
         window.fill(0)
         window.blit(rect1_surface, rect1)
         window.blit(rect2_surface, rect2)
         window.blit(rect3_surface, rect3)
         pygame.display.flip()
-
     return (difficulty)
 
 pygame.init()
