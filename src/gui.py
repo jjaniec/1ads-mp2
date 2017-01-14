@@ -1,5 +1,6 @@
 from typing import Tuple, Callable, TypeVar, Any, List, Optional, Dict
 from math import floor
+
 import pygame
 from pygame.locals import *
 
@@ -10,48 +11,65 @@ Clock = TypeVar('Clock')
 Coord = Tuple[int, int]
 Row = List[int]
 Board = List[Row]
-Color = Tuple[int, int, int]
+
+# Events
+RENDER_BOARD = USEREVENT + 1
 
 def setup(window_dim: Tuple[int, int],
-          window_caption: str,
-          additional_setup: Optional[Callable] = None) -> Tuple[Surface, Clock]:
+          window_caption: str) -> Tuple[Surface, Clock]:
     """Initialize Pygame and a window with the given dimensions. Also set up the
-    clock object. Additional setup can be done with an optional provided
-    function.
+    clock object.
     """
 
     pygame.init()
     window = pygame.display.set_mode(window_dim)
     pygame.display.set_caption(window_caption)
     clock = pygame.time.Clock()
-    if additional_setup is not None:
-        additional_return = additional_setup(window, clock)
 
     return window, clock
 
 def drawer(window: Surface,
            clock: Clock,
            fps: int,
-           draw: Callable[[Surface, List], None],
-           manage_events: Callable[[List[Event]], List]) -> None:
+           board: Board,
+           render_events: Callable[[Surface, Board, List[Event]], None]) -> None:
     """Abstract the main loop by just having to specify the main window, the
-    clock object, frames per second, the draw routine that will manage every
-    sketching on the window and a function that will manage the events and
-    compute the changes that will be drawn in then next frame.
+    clock object, frames per second, the game board and the event rendering
+    routine that will manage every sketching on the window according to the ones
+    inside the event queue.
     """
 
-    mutations = []
+    post_event(RENDER_BOARD) # Initial rendering of the board
     while True:
-        draw(window, mutations)
-        mutations = manage_events(pygame.event.get())
-        if mutations[0]:
-            pygame.display.flip() # Actualize display
+        pass_next_frame = render_events(window, board, pygame.event.get())
+        if pass_next_frame:
             clock.tick(fps)
         else:
             break
 
-def cell_drawer(board: Board,
-                surface: Surface) -> Callable[[Coord], None]:
+def post_event(event_type: int, attributes: Optional[Dict] = {}) -> None:
+    """Little utility to queue up an event with less prose."""
+
+    pygame.event.post(pygame.event.Event(event_type, attributes))
+
+def render_events(window: Surface, board: Board, events: List[Event]) -> bool:
+    """This procedure takes the care of drawing everything we want inside our
+    window according the RENDER_* events received.
+    """
+
+    draw_cell = cell_drawer(window, board)
+    for event in events:
+        if event.type is QUIT:
+            return False # Abort
+        elif event.type is RENDER_BOARD:
+            window.fill((0, 0, 0))
+            draw_board(draw_cell, len(board))
+
+    pygame.display.flip() # Actualize display
+    return True
+
+def cell_drawer(container: Surface,
+                board: Board) -> Callable[[Coord, Optional[bool]], None]:
     """Higher order function that enables the construction of cell drawing
     procedure that only needs the coordinates of a cell inside the game board as
     a paramater.
@@ -70,26 +88,32 @@ def cell_drawer(board: Board,
         (218, 205, 225), # 9
         (218, 205, 225) # 10
     )
-    board_area = len(board)
-    cell_width = surface.get_width() / board_area
-    cell_height = surface.get_height() / board_area
+
+    n = len(board)
+    cell_width = container.get_width() / n
+    cell_height = container.get_height() / n
+    cell_dimensions = (cell_width, cell_height)
     font_size = floor(cell_width / 4)
     font = pygame.font.Font(pygame.font.match_font('Fixedsys'), font_size)
-    def draw_cell(cell: Coord):
+    def draw_cell(cell: Coord, selected: Optional[bool] = False) -> None:
         x = cell[0]
         y = cell[1]
         value = board[y][x]
 
-        cell_rect = (x * cell_width, y * cell_height, cell_width, cell_height)
-        cell_color = cell_colors[value]
-        font_color = map(lambda v: 255 - v, cell_color)
-        font_surface = font.render(str(value), True, font_color)
-        font_rect = font_surface.get_rect(center=((x + 0.5) * cell_width,
-                                                  (y + 0.5) * cell_height))
+        cell_position = (cell_width * x, cell_height * y)
+        cell_rect = (cell_position, cell_dimensions)
+        cell_color = cell_colors[0 if selected else value]
+        cell_surface = pygame.Surface(cell_dimensions)
+        cell_surface.fill(cell_color)
 
-        pygame.draw.rect(surface, cell_color, cell_rect)
-        surface.blit(font_surface, font_rect) # Paste the font surface onto the
-                                              # cell
+        font_color = (0, 0, 0) if selected else (255, 255, 255)
+        font_surface = font.render(str(value), True, font_color)
+        font_position = font_surface.get_rect(center=((0.5) * cell_width,
+                                                      (0.5) * cell_height))
+
+        cell_surface.blit(font_surface, font_position) # Paste the font surface
+                                                       # onto the cell's one
+        container.blit(cell_surface, cell_rect)
 
     return draw_cell
 
@@ -102,7 +126,7 @@ def draw_these_cells(draw_cell: Callable[[Coord], None],
 
 def draw_board(draw_cell: Callable[[Coord], None], board_length: int) -> None:
     """Provided a cell drawing procedure and the length of the board, calls the
-    earlier on each coordinate of the board.
+    former on each coordinate of the board.
     """
 
     r = range(board_length)
@@ -110,28 +134,12 @@ def draw_board(draw_cell: Callable[[Coord], None], board_length: int) -> None:
         for x in r:
             draw_cell((x, y))
 
-def draw(window: Surface, changes: List) -> None:
-    """This procedure takes the care of drawing everything we want inside our
-    window. The changes dictionary contains a list of additonal distortions that
-    it have apply to the drawings.
-    """
-
+if __name__ == "__main__":
     board = [
         [1, 4, 2, 3],
         [5, 1, 1, 1],
         [1, 1, 1, 9],
         [2, 2, 2, 1]
     ]
-    draw_board(cell_drawer(board, window), len(board))
-
-def manage_events(events: List[Event]) -> List: # TODO
-    """Given a list of event, compute a list of changes to be applied at the
-    next draw call (i.e. the next frame), while modifying the board if the event
-    list ends up bringing the need to."""
-
-    raise Warning("TODO: manage_events is not yet implemented.")
-    return [False]
-
-if __name__ == "__main__":
     window, clock = setup((1000, 1000), "Just Get 10")
-    drawer(window, clock, 60, draw, manage_events)
+    drawer(window, clock, 60, board, render_events)
