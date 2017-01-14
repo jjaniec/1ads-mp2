@@ -45,7 +45,9 @@ def drawer(window: Surface,
 
     post_event(RENDER_BOARD) # Initial rendering of the board
     while True:
-        pass_next_frame = render_events(window, board, pygame.event.get())
+        events = pygame.event.get()
+        process_render_events(window, board, events)
+        pass_next_frame = process_user_events(window, board, events)
         if pass_next_frame:
             clock.tick(fps)
         else:
@@ -56,20 +58,32 @@ def post_event(event_type: int, attributes: Optional[Dict] = {}) -> None:
 
     pygame.event.post(pygame.event.Event(event_type, attributes))
 
-def render_events(window: Surface, board: Board, events: List[Event]) -> bool:
+def process_render_events(window: Surface,
+                          board: Board,
+                          events: List[Event]) -> None:
     """This procedure takes the care of drawing everything we want inside our
     window according the RENDER_* events received.
     """
 
     draw_cell = cell_drawer(window, board)
     for event in events:
-        if event.type is QUIT:
-            return False # Abort
-        elif event.type is RENDER_BOARD:
+        if event.type is RENDER_BOARD:
             window.fill((0, 0, 0))
             draw_board(draw_cell, len(board))
 
     pygame.display.flip() # Actualize display
+
+def process_user_events(window: Surface,
+                        board: Board,
+                        events: List[Event]) -> bool:
+    """Every user-related events are processed here, setting off other events
+    depending on the case, as a RENDER_BOARD event for instance.
+    """
+
+    for event in events:
+        if event.type is QUIT:
+            return False # Abort
+
     return True
 
 def cell_drawer(container: Surface,
