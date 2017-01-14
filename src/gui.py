@@ -4,6 +4,8 @@ from math import floor
 import pygame
 from pygame.locals import *
 
+from basis import generate_board
+
 # Type aliases
 Surface = TypeVar('Surface')
 Event = TypeVar('Event')
@@ -32,7 +34,7 @@ def drawer(window: Surface,
            clock: Clock,
            fps: int,
            board: Board,
-           render_events: Callable[[Surface, Board, List[Event]], None]) -> None:
+           render_events: Callable[[Surface, Board, List[Event]], bool]) -> None:
     """Abstract the main loop by just having to specify the main window, the
     clock object, frames per second, the game board and the event rendering
     routine that will manage every sketching on the window according to the ones
@@ -117,14 +119,15 @@ def cell_drawer(container: Surface,
 
     return draw_cell
 
-def draw_these_cells(draw_cell: Callable[[Coord], None],
+def draw_these_cells(draw_cell: Callable[[Coord, Optional[bool]], None],
                      cells: List[Coord]) -> None:
     """Draw a list of cells by employing the provided cell drawing procedure."""
 
     for cell in cells:
         draw_cell(cell)
 
-def draw_board(draw_cell: Callable[[Coord], None], board_length: int) -> None:
+def draw_board(draw_cell: Callable[[Coord, Optional[bool]], None],
+               board_length: int) -> None:
     """Provided a cell drawing procedure and the length of the board, calls the
     former on each coordinate of the board.
     """
@@ -135,11 +138,6 @@ def draw_board(draw_cell: Callable[[Coord], None], board_length: int) -> None:
             draw_cell((x, y))
 
 if __name__ == "__main__":
-    board = [
-        [1, 4, 2, 3],
-        [5, 1, 1, 1],
-        [1, 1, 1, 9],
-        [2, 2, 2, 1]
-    ]
+    board = generate_board(5, (0.125, 0.25, 0.5))
     window, clock = setup((1000, 1000), "Just Get 10")
     drawer(window, clock, 60, board, render_events)
