@@ -1,3 +1,5 @@
+"""This file contains all routines to render the GUI and process user inputs."""
+
 from typing import Tuple, Callable, TypeVar, Any, List, Optional, Dict
 from math import floor
 
