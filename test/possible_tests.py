@@ -1,9 +1,7 @@
 """Possible unit test."""
 
 import unittest
-from sys import path
-path.append('..')
-from src import possible
+import possible
 from random import randint
 
 class PossibleTests(unittest.TestCase):
