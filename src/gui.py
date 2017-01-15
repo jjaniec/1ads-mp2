@@ -16,12 +16,18 @@ Surface = TypeVar('Surface')
 Event = TypeVar('Event')
 Clock = TypeVar('Clock')
 Coord = Tuple[int, int]
+Color = Tuple[int, int, int, Optional[int]]
 Row = List[int]
 Board = List[Row]
 
 # Events
 RENDER_BOARD = USEREVENT + 1
 RENDER_SELECTION = USEREVENT + 2
+RENDER_WIN = USEREVENT + 3
+RENDER_WIN_DONE = USEREVENT + 4
+RENDER_LOOSE = USEREVENT + 5
+RENDER_LOOSE_DONE = USEREVENT + 6
+DEFER_EVENT = USEREVENT + 7
 
 def setup(window_dim: Tuple[int, int],
           window_caption: str) -> Tuple[Surface, Clock]:
@@ -52,6 +58,7 @@ def drawer(window: Surface,
     post_event(RENDER_BOARD) # Initial rendering of the board
     while True:
         events = pygame.event.get()
+        process_defered_events(events)
         process_render_events(window, board, events)
         pass_next_frame = process_user_events(window, board, events)
         if pass_next_frame:
@@ -64,6 +71,24 @@ def post_event(event_type: int, attributes: Optional[Dict] = {}) -> None:
 
     pygame.event.post(pygame.event.Event(event_type, attributes))
 
+def defer_event(event_type: int, frames: int) -> None:
+    """Emit a defered event that will emit another envent with event_type in the
+    number of frames provided.
+    """
+
+    post_event(DEFER_EVENT, { "defered_type": event_type, "frames": frames })
+
+def process_defered_events(events: List[Event]) -> None:
+    """Take care of decrementing the number of frames in which defered event
+    will get emitted. Emit these defered events when their frames number is 0.
+    """
+
+    for event in events:
+        if event.type is DEFER_EVENT and event.frames > 0:
+            post_event(DEFER_EVENT, { "defered_type": event.defered_type, "frames": event.frames - 1 })
+        elif event.type is DEFER_EVENT and event.frames is 0:
+            post_event(event.defered_type)
+
 def process_render_events(window: Surface,
                           board: Board,
                           events: List[Event]) -> None:
@@ -73,12 +98,22 @@ def process_render_events(window: Surface,
 
     draw_cell = cell_drawer(window, board)
     draw_selected_cell = partial(draw_cell, selected=True)
+    write_text = partial(draw_centered_text, surface=window,
+                         font_name='Fixedsys', color=(255, 255, 255))
     for event in events:
         if event.type is RENDER_BOARD:
             window.fill((0, 0, 0)) # Erase everything
             draw_board(draw_cell, len(board))
         elif event.type is RENDER_SELECTION:
             draw_these_cells(draw_selected_cell, event.selected_cells)
+        elif event.type is RENDER_WIN:
+            window.fill((0, 0, 0)) # Erase everything
+            write_text(text="YOU WIN")
+            defer_event(RENDER_WIN_DONE, 60)
+        elif event.type is RENDER_LOOSE:
+            window.fill((0, 0, 0)) # Erase everything
+            write_text(text="YOU LOOSE")
+            defer_event(RENDER_LOOSE_DONE, 60)
 
     pygame.display.flip() # Actualize display
 
@@ -105,13 +140,13 @@ def process_user_events(window: Surface,
             # Not yet selected, and is a suite of similar cells
             elif len(selected_cells) > 1:
                 post_event(RENDER_SELECTION, {"selected_cells": selected_cells})
+        elif event.type is RENDER_WIN_DONE or event.type is RENDER_LOOSE_DONE:
+            post_event(QUIT)
 
     if maximum_value_in_board(board) is 10:
-        print("WIN")
-        post_event(QUIT)
+        post_event(RENDER_WIN)
     elif not is_board_still_playable(board):
-        print("LOOSE")
-        post_event(QUIT)
+        post_event(RENDER_LOOSE)
 
     return True
 
@@ -148,8 +183,6 @@ def cell_drawer(container: Surface,
     cell_width = container.get_width() / n
     cell_height = container.get_height() / n
     cell_dimensions = (cell_width, cell_height)
-    font_size = floor(cell_width / 4)
-    font = pygame.font.Font(pygame.font.match_font('Fixedsys'), font_size)
     def draw_cell(cell: Coord, selected: Optional[bool] = False) -> None:
         x = cell[0]
         y = cell[1]
@@ -162,12 +195,8 @@ def cell_drawer(container: Surface,
         cell_surface.fill(cell_color)
 
         font_color = (0, 0, 0) if selected else (255, 255, 255)
-        font_surface = font.render(str(value), True, font_color)
-        font_position = font_surface.get_rect(center=((0.5) * cell_width,
-                                                      (0.5) * cell_height))
 
-        cell_surface.blit(font_surface, font_position) # Paste the font surface
-                                                       # onto the cell's one
+        draw_centered_text(cell_surface, 'Fixedsys', font_color, str(value))
         container.blit(cell_surface, cell_rect)
 
     return draw_cell
@@ -189,6 +218,19 @@ def draw_board(draw_cell: Callable[[Coord, Optional[bool]], None],
     for y in r:
         for x in r:
             draw_cell((x, y))
+
+def draw_centered_text(surface: Surface, font_name: str, color: Color,
+                       text: str) -> None:
+    """Draw text with font and color at the center of surface. The font size is
+    automatically determined.
+    """
+
+    font_size = floor(surface.get_width() / 4)
+    font = pygame.font.Font(pygame.font.match_font(font_name), font_size)
+    font_surface = font.render(text, True, color)
+    font_position = font_surface.get_rect(center=(0.5 * surface.get_width(),
+                                                  0.5 * surface.get_height()))
+    surface.blit(font_surface, font_position)
 
 if __name__ == "__main__":
     board = generate_board(5, (0.125, 0.25, 0.5))
