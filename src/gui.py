@@ -2,6 +2,7 @@
 
 from typing import Tuple, Callable, TypeVar, Any, List, Optional, Dict
 from math import floor
+from functools import partial
 
 import pygame
 from pygame.locals import *
@@ -18,6 +19,7 @@ Board = List[Row]
 
 # Events
 RENDER_BOARD = USEREVENT + 1
+RENDER_SELECTION = USEREVENT + 2
 
 def setup(window_dim: Tuple[int, int],
           window_caption: str) -> Tuple[Surface, Clock]:
@@ -36,7 +38,9 @@ def drawer(window: Surface,
            clock: Clock,
            fps: int,
            board: Board,
-           render_events: Callable[[Surface, Board, List[Event]], bool]) -> None:
+           process_render_events: Callable[[Surface, Board, List[Event]], None],
+           process_user_events: Callable[[Surface, Board, List[Event]], bool]
+           ) -> None:
     """Abstract the main loop by just having to specify the main window, the
     clock object, frames per second, the game board and the event rendering
     routine that will manage every sketching on the window according to the ones
@@ -66,10 +70,13 @@ def process_render_events(window: Surface,
     """
 
     draw_cell = cell_drawer(window, board)
+    draw_selected_cell = partial(draw_cell, selected=True)
     for event in events:
         if event.type is RENDER_BOARD:
-            window.fill((0, 0, 0))
+            window.fill((0, 0, 0)) # Erase everything
             draw_board(draw_cell, len(board))
+        elif event.type is RENDER_SELECTION:
+            draw_these_cells(draw_selected_cell, event.selected_cells)
 
     pygame.display.flip() # Actualize display
 
@@ -83,8 +90,25 @@ def process_user_events(window: Surface,
     for event in events:
         if event.type is QUIT:
             return False # Abort
-
+        elif event.type is MOUSEBUTTONUP:
+            cell = get_coord_from_pos(window, event.pos, len(board))
+            selected_cells = [ cell ] # TODO: Retrieve all white cells when
+                                      # clicking onto a selected cell
+            post_event(RENDER_BOARD)
+            if window.get_at(event.pos) != (255, 255, 255, 255): # Not selected
+                post_event(RENDER_SELECTION, {"selected_cells": selected_cells})
+            else: # Selected
+                # TODO
+                for x, y in selected_cells: board[y][x] += 1 # For the example
     return True
+
+def get_coord_from_pos(surface, pos, nb_sep):
+
+    cell_width = surface.get_width() / nb_sep
+    cell_height = surface.get_height() / nb_sep
+    x = floor(pos[0] / cell_width)
+    y = floor(pos[1] / cell_height)
+    return (x, y)
 
 def cell_drawer(container: Surface,
                 board: Board) -> Callable[[Coord, Optional[bool]], None]:
@@ -156,4 +180,5 @@ def draw_board(draw_cell: Callable[[Coord, Optional[bool]], None],
 if __name__ == "__main__":
     board = generate_board(5, (0.125, 0.25, 0.5))
     window, clock = setup((1000, 1000), "Just Get 10")
-    drawer(window, clock, 60, board, render_events)
+    drawer(window, clock, 60, board, process_render_events,
+           process_user_events)
