@@ -8,6 +8,7 @@ import pygame
 from pygame.locals import *
 
 from basis import generate_board
+from merge import get_similar_cells_suite, merge_cells, fall_and_fill
 
 # Type aliases
 Surface = TypeVar('Surface')
@@ -92,15 +93,16 @@ def process_user_events(window: Surface,
             return False # Abort
         elif event.type is MOUSEBUTTONUP:
             cell = get_coord_from_pos(window, event.pos, len(board))
-            selected_cells = [ cell ] # TODO: Retrieve all white cells when
-                                      # clicking onto a selected cell
-            post_event(RENDER_BOARD)
+            selected_cells = [ cell ]
+            get_similar_cells_suite(board, cell, selected_cells)
+            post_event(RENDER_BOARD) # Whatever happens, we will need to redraw
+                                     # the entire board
             # Already selected
             if window.get_at(event.pos) == (255, 255, 255, 255):
-                # TODO
-                for x, y in selected_cells: board[y][x] += 1 # For the example
-            # Not yet selected
-            else:
+                merge_cells(board, selected_cells)
+                fall_and_fill(board, (0.125, 0.25, 0.5))
+            # Not yet selected, and is a suite of similar cells
+            elif len(selected_cells) > 1:
                 post_event(RENDER_SELECTION, {"selected_cells": selected_cells})
     return True
 
