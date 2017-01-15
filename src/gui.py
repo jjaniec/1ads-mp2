@@ -32,8 +32,8 @@ WIN_LOOSE_DONE = 6
 
 def setup(window_dim: Tuple[int, int],
           window_caption: str) -> Tuple[WindowSurfaces, Clock]:
-    """Initialize Pygame and a window with the given dimensions. Also set up the
-    clock object.
+    """Initialize Pygame and window and its subsurfaces board and menu with the
+    given dimensions. Also set up the clock object.
     """
 
     pygame.init()
@@ -41,7 +41,8 @@ def setup(window_dim: Tuple[int, int],
     pygame.display.set_caption(window_caption)
     board_rect = pygame.Rect((0, 0), (window_dim[0] / 3 * 2, window_dim[1]))
     board = window.subsurface(board_rect)
-    menu_rect = pygame.Rect((1000, 0), (window_dim[0] / 3, window_dim[1]))
+    menu_rect = pygame.Rect((window_dim[0] / 3 * 2, 0),
+                            (window_dim[0] / 3, window_dim[1]))
     menu = window.subsurface(menu_rect)
     surfaces = { "window": window, "board": board, "menu": menu }
     clock = pygame.time.Clock()
@@ -55,7 +56,7 @@ def drawer(surfaces: WindowSurfaces,
            process_render_events: Callable[[WindowSurfaces, Board, List[Event]], None],
            process_user_events: Callable[[WindowSurfaces, Board, List[Event]], bool]
            ) -> None:
-    """Abstract the main loop by just having to specify the main window, the
+    """Abstract the main loop by just having to specify the main surfaces, the
     clock object, frames per second, the game board and the event rendering
     routine that will manage every sketching on the window according to the ones
     inside the event queue.
@@ -74,13 +75,16 @@ def drawer(surfaces: WindowSurfaces,
 
 def post_event(event_type: int, extended_type: int = -1,
                attributes: Optional[Dict] = {}) -> None:
-    """Little utility to queue up an event with less prose."""
+    """Little utility to queue up an event with less prose. Extended event type
+    is mainly used when queuing a USEREVENT, this enables to make more custom
+    events than 8 allowed by pygame.
+    """
 
     attributes["extended_type"] = extended_type
     pygame.event.post(pygame.event.Event(event_type, attributes))
 
 def defer_event(event_type: int, extended_type: int, frames: int) -> None:
-    """Emit a defered event that will emit another envent with event_type in the
+    """Emit a defered event that will emit another event with event_type in the
     number of frames provided.
     """
 
@@ -95,12 +99,16 @@ def process_defered_events(events: List[Event]) -> None:
     """
 
     for event in events:
-        if event.type is USEREVENT and event.extended_type is DEFER_EVENT and event.frames > 0:
+        if (event.type is USEREVENT and
+                event.extended_type is DEFER_EVENT and
+                event.frames > 0):
             post_event(USEREVENT, DEFER_EVENT,
                        { "defered_type": event.defered_type,
                          "defered_extended_type": event.defered_extended_type,
                          "frames": event.frames - 1 })
-        elif event.type is USEREVENT and event.extended_type is DEFER_EVENT and event.frames is 0:
+        elif (event.type is USEREVENT and
+                  event.extended_type is DEFER_EVENT and
+                  event.frames is 0):
             post_event(event.defered_type, event.defered_extended_type)
 
 def process_render_events(surfaces: WindowSurfaces,
@@ -132,13 +140,13 @@ def process_render_events(surfaces: WindowSurfaces,
             draw_menu(surfaces["menu"], board)
             post_event(USEREVENT, WIN_LOOSE_DONE)
 
-    pygame.display.flip() # Actualize display
+    pygame.display.flip() # Actualize entire display
 
 def process_user_events(surfaces: WindowSurfaces,
                         board: Board,
                         events: List[Event]) -> bool:
     """Every user-related events are processed here, setting off other events
-    depending on the case, as a RENDER_BOARD event for instance.
+    depending on the case, as a RENDER_WINDOW event for instance.
     """
 
     win_loose_done = False
@@ -152,8 +160,8 @@ def process_user_events(surfaces: WindowSurfaces,
                 selected_cells = [ cell ]
                 get_similar_cells_suite(board, cell, selected_cells)
                 post_event(USEREVENT, RENDER_WINDOW) # Whatever happens, we will
-                                                    # need to redraw the entire
-                                                    # window
+                                                     # need to redraw the entire
+                                                     # window
                 # Already selected
                 if surfaces["board"].get_at(event.pos) == (255, 255, 255, 255):
                     merge_cells(board, selected_cells)
@@ -282,12 +290,13 @@ def draw_menu(surface: Surface, board: Board) -> None:
     full_height = surface.get_height()
     button_rect = pygame.Rect((0, 0), (full_width, full_height / 3))
     score_button = generate_button("Score: " + str(score), surface, button_rect)
-    reset_button_rect = button_rect.move(0, 333)
+    reset_button_rect = button_rect.move(0, full_height / 3)
     reset_button = generate_button("Reset", surface, reset_button_rect)
-    quit_button_rect = button_rect.move(0, 666)
+    quit_button_rect = button_rect.move(0, full_height / 3 * 2)
     quit_button = generate_button("Quit", surface, quit_button_rect)
 
 def generate_button(text: str, container: Surface, rect) -> Surface:
+    """Boilerplate for generating a subsurface with a given text inside."""
 
     button_surface = container.subsurface(rect)
     button_surface.fill((255, 255, 255))
