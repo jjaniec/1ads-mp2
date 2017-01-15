@@ -8,6 +8,14 @@ from typing import List, Any
 Row = List[int]
 Board = List[Row]
 
+def is_board_still_playable(board: Board) -> bool:
+    """Evaluate if at least one cell on the board has at least one another
+    adjacent cell having the same value.
+    """
+
+    n = range(len(board))
+    return any([has_similar_adjacent_cell(board, x, y) for y in n for x in n])
+
 def has_similar_adjacent_cell(board: Board, x: int, y: int) -> bool:
     """Evaluate if there is a cell adjacent to the one at x;y holding the same
     value as the latter.
@@ -30,14 +38,6 @@ def get_adjacent_cell(board: Board, x: int, y: int) -> Row:
             (abs(row_index - y) is 0 or
              abs(col_index - x) is 0))
     ]
-
-def is_board_still_playable(board: Board) -> bool:
-    """Evaluate if at least one cell on the board has at least one another
-    adjacent cell having the same value.
-    """
-
-    n = range(len(board))
-    return any([has_similar_adjacent_cell(board, x, y) for y in n for x in n])
 
 def maximum_value_in_board(board: Board) -> int:
     """Given a board, it returns the maximum value in it."""
