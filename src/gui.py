@@ -8,6 +8,7 @@ import pygame
 from pygame.locals import *
 
 from basis import generate_board
+from possible import is_board_still_playable, maximum_value_in_board
 from merge import get_similar_cells_suite, merge_cells, fall_and_fill
 
 # Type aliases
@@ -104,6 +105,14 @@ def process_user_events(window: Surface,
             # Not yet selected, and is a suite of similar cells
             elif len(selected_cells) > 1:
                 post_event(RENDER_SELECTION, {"selected_cells": selected_cells})
+
+    if maximum_value_in_board(board) is 10:
+        print("WIN")
+        post_event(QUIT)
+    elif not is_board_still_playable(board):
+        print("LOOSE")
+        post_event(QUIT)
+
     return True
 
 def get_coord_from_pos(surface, pos, nb_sep):
