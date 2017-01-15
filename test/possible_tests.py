@@ -15,7 +15,7 @@ class PossibleTests(unittest.TestCase):
         ]
         self.assertFalse(possible.is_board_still_playable(unplayable_board))
         playable_board = [
-            [4, 1, 3, 4],
+            [4, 1, 4, 4],
             [5, 6, 4, 9],
             [1, 2, 3, 5]
         ]
