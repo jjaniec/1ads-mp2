@@ -1,9 +1,7 @@
 """Basis unit test."""
 
 import unittest
-from sys import path
-path.append('..')
-from src import basis
+import basis
 
 class BasisTests(unittest.TestCase):
     """All basis testing methods."""
