@@ -95,11 +95,13 @@ def process_user_events(window: Surface,
             selected_cells = [ cell ] # TODO: Retrieve all white cells when
                                       # clicking onto a selected cell
             post_event(RENDER_BOARD)
-            if window.get_at(event.pos) != (255, 255, 255, 255): # Not selected
-                post_event(RENDER_SELECTION, {"selected_cells": selected_cells})
-            else: # Selected
+            # Already selected
+            if window.get_at(event.pos) == (255, 255, 255, 255):
                 # TODO
                 for x, y in selected_cells: board[y][x] += 1 # For the example
+            # Not yet selected
+            else:
+                post_event(RENDER_SELECTION, {"selected_cells": selected_cells})
     return True
 
 def get_coord_from_pos(surface, pos, nb_sep):
