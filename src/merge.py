@@ -9,7 +9,8 @@ def get_similar_cells_suite(board: Board,
                             cell: Coord,
                             cells_suite: List[Coord]) -> None:
     """Put inside cell_suite all the cells that are directly or indirectly
-    adjacent (excluding diagonals) to cell.
+    adjacent (excluding diagonals) to cell. It acts directly on cells_suite
+    (i.e. side-effects).
     """
 
     n = len(board)
@@ -32,10 +33,11 @@ def get_similar_cells_suite(board: Board,
         for i in range(1, after_cells_suite_length):
             get_similar_cells_suite(board, cells_suite[i], cells_suite)
 
-def merge_cells(board: Board, cells: List[Coord]):
+def merge_cells(board: Board, cells: List[Coord]) -> None:
     """Merge all cells located at the coordinates inside the list provided as
     paramater by incrementing the cell located a index 0 and emptying all the
-    others cells (i.e. setting their value to 0).
+    others cells (i.e. setting their value to 0). It acts directly on board
+    (i.e. side-effects).
     """
 
     cell_to_merge_into = cells[0]
@@ -53,7 +55,7 @@ def merge_cells(board: Board, cells: List[Coord]):
 
 def fall_and_fill(board: Board, ratios: Tuple[float, float, float]) -> None:
     """Make cells falling when they have an empty one below them and fill these
-    empty cells.
+    empty cells. It acts directly on board (i.e. side-effects).
     """
 
     n = len(board)
@@ -71,7 +73,9 @@ def fall_and_fill(board: Board, ratios: Tuple[float, float, float]) -> None:
 def fill_empty_cell(board: Board,
                     cell: Coord,
                     ratios: Tuple[float, float, float]) -> None:
-    """Fill the provided empty cell."""
+    """Fill the provided empty cell. It acts directly on board (i.e.
+    side-effects).
+    """
 
     x = cell[0]
     y = cell[1]
