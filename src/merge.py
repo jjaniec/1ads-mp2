@@ -1,67 +1,82 @@
 from typing import Tuple, List
 from basis import generate_cell
 
-Coord = Tuple[int, int]
 Row = List[int]
 Board = List[Row]
+Coord = Tuple[int, int]
 
-#3.3[0]
-def     get_appendable_in_arr(arr: Board, coords: Coord,\
-coordstoadd: Tuple[int, int]) -> int:
-    """Tell if an element in Board should be added in the TupleArray returned by
-    get_adj_cells function"""
+def get_similar_cells_suite(board: Board,
+                            cell: Coord,
+                            cells_suite: List[Coord]) -> None:
+    """Put inside cell_suite all the cells that are directly or indirectly
+    adjacent (excluding diagonals) to cell.
+    """
 
-    if arr[coords[0]][coords[1]] == arr[coordstoadd[0]][coordstoadd[1]]:
-        return 0
-    return 1
+    n = len(board)
+    adjacent_coordinates = [ (-1, 0), (1, 0), (0, -1), (0, 1) ]
 
-def     get_adj_cells(n: int, arr: Board, coords: Tuple[int, int], li:\
- List[Coord]) -> None:
-    """Return an array of tuple of adjacent cells content
-    equal of the given one"""
+    before_cells_suite_length = len(cells_suite)
     i = 0
-    coordstocheck = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-    givenlistlen = len(li)
-
     while i != 4:
-        x = coords[1] + coordstocheck[i][1]
-        y = coords[0] + coordstocheck[i][0]
-        if x >= 0 and x < n and y >= 0 and y < n:
-            if get_appendable_in_arr(arr, coords, (y, x)) == 0:
-                 if (y, x) not in li:
-                    li.append((y, x))
+        x = cell[0] + adjacent_coordinates[i][0]
+        y = cell[1] + adjacent_coordinates[i][1]
+        if ((x >= 0 and x < n and y >= 0 and y < n) and # Are x and y inside
+                                                        # board
+            board[cell[1]][cell[0]] is board[y][x] and
+            (x, y) not in cells_suite):
+            cells_suite.append((x, y))
         i += 1
-    if (givenlistlen != len(li)):
-        for _ in range(1, len(li)):
-            get_adj_cells(n, arr, li[_], li)
+    after_cells_suite_length = len(cells_suite)
 
-#3.3[1]
-def     change_cells_values(n: int, arr: Board, li: List[Coord]):
-    """Set += 1 on arr[li[0][0]][li[0][1]] and set other coords to 0"""
-    i = 1
-    arr[li[0][0]][li[0][1]] += 1
-    while i < len(li):
-        arr[li[i][0]][li[i][1]] = 0
-        i += 1
-#3.3[2]
-def     fill_zero(n: int, arr: Board, coords: Coord) -> None:
-    """Change zero by random value returned by generate_cell function"""
+    if before_cells_suite_length is not after_cells_suite_length:
+        for i in range(1, after_cells_suite_length):
+            get_similar_cells_suite(board, cells_suite[i], cells_suite)
+
+def merge_cells(board: Board, cells: List[Coord]):
+    """Merge all cells located at the coordinates inside the list provided as
+    paramater by incrementing the cell located a index 0 and emptying all the
+    others cells (i.e. setting their value to 0).
+    """
+
+    cell_to_merge_into = cells[0]
+    cells_to_empty = cells[1:]
+
+    board[cell_to_merge_into[1]][cell_to_merge_into[0]] += 1
+
     i = 0
-
-    while (coords[0] - i - 1) > -1:
-        arr[coords[0] - i][coords[1]] = arr[coords[0] - 1 - i][coords[1]]
+    while i < len(cells_to_empty):
+        cell_to_empty = cells_to_empty[i]
+        x = cell_to_empty[0]
+        y = cell_to_empty[1]
+        board[y][x] = 0
         i += 1
-    arr[coords[0] - i][coords[1]] = generate_cell((0.2, 0.3, 0.4))
 
-def     remove_zeros(n: int, arr: Board, tupl: Tuple[int, int]) -> None:
-    """Search for 0s to call fill_zero"""
+def fall_and_fill(board: Board, ratios: Tuple[float, float, float]) -> None:
+    """Make cells falling when they have an empty one below them and fill these
+    empty cells.
+    """
+
+    n = len(board)
+    x = 0
+    y = 0
+
+    while y < n:
+        while x < n:
+            if board[y][x] == 0:
+                fill_empty_cell(board, (x, y), ratios)
+            x += 1
+        x = 0
+        y += 1
+
+def fill_empty_cell(board: Board,
+                    cell: Coord,
+                    ratios: Tuple[float, float, float]) -> None:
+    """Fill the provided empty cell."""
+
+    x = cell[0]
+    y = cell[1]
     i = 0
-    j = 0
-
-    while i < n:
-        while j < n:
-            if arr[i][j] == 0:
-                fill_zero(n, arr, (i, j))
-            j += 1
+    while (y - i - 1) > -1:
+        board[y - i][x] = board[y - i - 1][x]
         i += 1
-        j = 0
+    board[y - i][x] = generate_cell(ratios)
