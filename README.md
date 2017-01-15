@@ -32,11 +32,15 @@ Tests are under the `test` directory.
 
 ## Installation
 
-Requires Python 3.5+.
+Requires Python 3.5+ and Pygame.
 
 Clone the repository:
 
     git clone https://github.com/pldiiw/1ads-mp2.git
+
+Then run the GUI:
+
+    python3 src/gui.py
 
 ## Tests
 
