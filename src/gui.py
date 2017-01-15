@@ -1,10 +1,14 @@
+"""This file contains all routines to render the GUI and process user inputs."""
+
 from typing import Tuple, Callable, TypeVar, Any, List, Optional, Dict
 from math import floor
+from functools import partial
 
 import pygame
 from pygame.locals import *
 
 from basis import generate_board
+from merge import get_similar_cells_suite, merge_cells, fall_and_fill
 
 # Type aliases
 Surface = TypeVar('Surface')
@@ -16,6 +20,7 @@ Board = List[Row]
 
 # Events
 RENDER_BOARD = USEREVENT + 1
+RENDER_SELECTION = USEREVENT + 2
 
 def setup(window_dim: Tuple[int, int],
           window_caption: str) -> Tuple[Surface, Clock]:
@@ -34,7 +39,9 @@ def drawer(window: Surface,
            clock: Clock,
            fps: int,
            board: Board,
-           render_events: Callable[[Surface, Board, List[Event]], bool]) -> None:
+           process_render_events: Callable[[Surface, Board, List[Event]], None],
+           process_user_events: Callable[[Surface, Board, List[Event]], bool]
+           ) -> None:
     """Abstract the main loop by just having to specify the main window, the
     clock object, frames per second, the game board and the event rendering
     routine that will manage every sketching on the window according to the ones
@@ -43,7 +50,9 @@ def drawer(window: Surface,
 
     post_event(RENDER_BOARD) # Initial rendering of the board
     while True:
-        pass_next_frame = render_events(window, board, pygame.event.get())
+        events = pygame.event.get()
+        process_render_events(window, board, events)
+        pass_next_frame = process_user_events(window, board, events)
         if pass_next_frame:
             clock.tick(fps)
         else:
@@ -54,21 +63,56 @@ def post_event(event_type: int, attributes: Optional[Dict] = {}) -> None:
 
     pygame.event.post(pygame.event.Event(event_type, attributes))
 
-def render_events(window: Surface, board: Board, events: List[Event]) -> bool:
+def process_render_events(window: Surface,
+                          board: Board,
+                          events: List[Event]) -> None:
     """This procedure takes the care of drawing everything we want inside our
     window according the RENDER_* events received.
     """
 
     draw_cell = cell_drawer(window, board)
+    draw_selected_cell = partial(draw_cell, selected=True)
+    for event in events:
+        if event.type is RENDER_BOARD:
+            window.fill((0, 0, 0)) # Erase everything
+            draw_board(draw_cell, len(board))
+        elif event.type is RENDER_SELECTION:
+            draw_these_cells(draw_selected_cell, event.selected_cells)
+
+    pygame.display.flip() # Actualize display
+
+def process_user_events(window: Surface,
+                        board: Board,
+                        events: List[Event]) -> bool:
+    """Every user-related events are processed here, setting off other events
+    depending on the case, as a RENDER_BOARD event for instance.
+    """
+
     for event in events:
         if event.type is QUIT:
             return False # Abort
-        elif event.type is RENDER_BOARD:
-            window.fill((0, 0, 0))
-            draw_board(draw_cell, len(board))
-
-    pygame.display.flip() # Actualize display
+        elif event.type is MOUSEBUTTONUP:
+            cell = get_coord_from_pos(window, event.pos, len(board))
+            selected_cells = [ cell ]
+            get_similar_cells_suite(board, cell, selected_cells)
+            post_event(RENDER_BOARD) # Whatever happens, we will need to redraw
+                                     # the entire board
+            # Already selected
+            if window.get_at(event.pos) == (255, 255, 255, 255):
+                merge_cells(board, selected_cells)
+                fall_and_fill(board, (0.125, 0.25, 0.5))
+            # Not yet selected, and is a suite of similar cells
+            elif len(selected_cells) > 1:
+                post_event(RENDER_SELECTION, {"selected_cells": selected_cells})
     return True
+
+def get_coord_from_pos(surface, pos, nb_sep):
+
+    cell_width = surface.get_width() / nb_sep
+    cell_height = surface.get_height() / nb_sep
+    x = floor(pos[0] / cell_width)
+    y = floor(pos[1] / cell_height)
+    return (x, y)
 
 def cell_drawer(container: Surface,
                 board: Board) -> Callable[[Coord, Optional[bool]], None]:
@@ -140,4 +184,5 @@ def draw_board(draw_cell: Callable[[Coord, Optional[bool]], None],
 if __name__ == "__main__":
     board = generate_board(5, (0.125, 0.25, 0.5))
     window, clock = setup((1000, 1000), "Just Get 10")
-    drawer(window, clock, 60, board, render_events)
+    drawer(window, clock, 60, board, process_render_events,
+           process_user_events)
