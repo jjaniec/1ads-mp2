@@ -26,9 +26,9 @@ def get_adjacent_cell(board: Board, x: int, y: int) -> Row:
         for col_index, cell in enumerate(row)
         if (abs(row_index - y) <= 1 and
             abs(col_index - x) <= 1 and
-            [row_index, col_index] != [y, x]) and # We don't want the cell itself.
+            [row_index, col_index] != [y, x] and # We don't want the cell itself
             (abs(row_index - y) is 0 or
-             abs(col_index - x) is 0)
+             abs(col_index - x) is 0))
     ]
 
 def is_board_still_playable(board: Board) -> bool:
