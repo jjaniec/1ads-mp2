@@ -10,7 +10,7 @@ red="\e[91m"
 green="\e[92m"
 
 echo -n "* Type checking... "
-mypyReport=$(mypy ${base_dir}/src/${files_to_typecheck})
+mypyReport=$(mypy --silent-imports ${base_dir}/src/${files_to_typecheck})
 if [[ ${?} -eq 0 ]]; then
   echo -e "${bold}${green}OK ✓${reset}"
 else
