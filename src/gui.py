@@ -300,7 +300,7 @@ def clear(surface):
     surface.fill((0, 0, 0))
 
 if __name__ == "__main__":
-    board = generate_board(2, (0.125, 0.25, 0.5))
+    board = generate_board(5, (0.125, 0.25, 0.5))
     surfaces, clock = setup((1500, 1000), "Just Get 10")
     drawer(surfaces, clock, 60, board, process_render_events,
            process_user_events)
