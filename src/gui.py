@@ -180,7 +180,7 @@ def process_user_events(surfaces: WindowSurfaces,
         elif event.type is USEREVENT and event.extended_type is WIN_LOOSE_DONE:
             win_loose_done = True
             if (maximum_value_in_board(board) is 10 or
-                not is_board_still_playable(board)):
+                    not is_board_still_playable(board)):
                 post_event(USEREVENT, WIN_LOOSE_DONE)
 
 
