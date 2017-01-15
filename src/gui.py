@@ -85,7 +85,8 @@ def process_defered_events(events: List[Event]) -> None:
 
     for event in events:
         if event.type is DEFER_EVENT and event.frames > 0:
-            post_event(DEFER_EVENT, { "defered_type": event.defered_type, "frames": event.frames - 1 })
+            post_event(DEFER_EVENT, { "defered_type": event.defered_type,
+                                      "frames": event.frames - 1 })
         elif event.type is DEFER_EVENT and event.frames is 0:
             post_event(event.defered_type)
 
